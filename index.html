@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172235"><meta name="description" content="Simple trading journal for every symbol.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Trade Journal</title>
+<style>
+:root{--navy:#172235;--gold:#d99b32;--paper:#fffaf1;--ink:#243247;--muted:#718096;--line:#e9dfcf;--green:#15803d;--red:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:#f5f1e9;color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:white;padding:20px max(16px,env(safe-area-inset-left));position:sticky;top:0;z-index:3}
+.head{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:21px;margin:0}header small{color:#cbd5e1}
+main{max-width:1000px;margin:18px auto;padding:0 14px 40px}.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+button,.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:650;background:var(--navy);color:white;cursor:pointer}
+button.secondary{background:#e9e2d5;color:var(--ink)}button.gold{background:var(--gold);color:#24190b}
+.tab.active{background:var(--gold);color:#24190b}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px #1822350b}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:12px}.stat small{color:var(--muted);display:block}.stat b{font-size:20px}
+form.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:5px}input,select{width:100%;padding:12px;border:1px solid #d8d1c5;border-radius:10px;background:white;color:var(--ink);font:inherit;min-width:0}
+.actions{display:flex;gap:8px;align-items:center;margin-top:13px;flex-wrap:wrap}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{text-align:center;padding:11px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:#77551f;background:#fff2d9}td{font-size:13px}
+.win{color:var(--green);font-weight:750}.loss{color:var(--red);font-weight:750}.muted{color:var(--muted)}.hidden{display:none!important}
+.rowhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h2{font-size:17px;margin:0 0 12px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.danger{background:#fee2e2;color:#991b1b}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}form.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:13px}header{padding-top:16px;padding-bottom:16px}}
+</style></head>
+<body>
+<header><div class="head"><div><h1>📒 Trade Journal</h1><small>Every symbol. One simple journal.</small></div><button id="installBtn" class="gold hidden">Install app</button></div></header>
+<main>
+<div class="tabs"><button class="tab active" data-tab="journal">Journal</button><button class="tab secondary" data-tab="summary">Summary</button><button class="tab secondary" data-tab="settings">Settings</button></div>
+<section id="journal">
+<div class="panel"><h2 id="formTitle">Add trade</h2>
+<form id="tradeForm" class="fields">
+<input type="hidden" id="editId">
+<label>Date<input id="date" type="date" required></label>
+<label>Symbol<input id="symbol" list="symbols" placeholder="e.g. HDFCBANK, RELIANCE" required><datalist id="symbols"></datalist></label>
+<label>Buy price<input id="buy" type="number" step="0.01" min="0" placeholder="Optional"></label>
+<label>Sell price<input id="sell" type="number" step="0.01" min="0" placeholder="Optional"></label>
+<label>Quantity<input id="qty" type="number" min="1" step="1" required placeholder="Qty"></label>
+<label>Stop loss<input id="sl" type="number" step="0.01" placeholder="Optional"></label>
+<label>Profit / Loss (₹)<input id="pnl" type="number" step="0.01" required placeholder="e.g. 1250 or -500"></label>
+<label>Side<select id="side"><option>Buy</option><option>Sell</option></select></label>
+<div class="actions" style="grid-column:1/-1"><button type="submit" class="gold">Save trade</button><button type="button" class="secondary" id="resetBtn">Clear</button><span class="note">Result (Win/Loss) is calculated from P/L.</span></div>
+</form></div>
+<div class="panel"><div class="rowhead"><h2>Trade history</h2><label style="max-width:180px">Filter symbol<select id="filter"><option value="">All symbols</option></select></label></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Symbol</th><th>Side</th><th>Buy</th><th>Sell</th><th>Qty</th><th>SL</th><th>P/L</th><th>Result</th><th>Actions</th></tr></thead><tbody id="trades"></tbody></table></div>
+<p id="empty" class="note">No trades yet. Add your first trade above.</p></div>
+</section>
+<section id="summary" class="hidden">
+<div class="panel"><h2>Performance summary</h2><div class="grid">
+<div class="stat"><small>Total trades</small><b id="total">0</b></div><div class="stat"><small>Wins</small><b id="wins">0</b></div><div class="stat"><small>Losses</small><b id="losses">0</b></div><div class="stat"><small>Win rate</small><b id="winrate">0%</b></div>
+<div class="stat"><small>Gross profit</small><b id="gross">₹0</b></div><div class="stat"><small>Gross loss</small><b id="gloss">₹0</b></div><div class="stat"><small>Profit factor</small><b id="pf">—</b></div><div class="stat"><small>Net P/L</small><b id="net">₹0</b></div></div></div>
+<div class="panel"><h2>Monthly performance</h2><div class="tablewrap"><table><thead><tr><th>Month</th><th>Trades</th><th>Wins</th><th>Losses</th><th>Win rate</th><th>Net P/L</th><th>Profit factor</th></tr></thead><tbody id="months"></tbody></table></div></div>
+</section>
+<section id="settings" class="hidden">
+<div class="panel"><h2>Symbols</h2><p class="note">Add any stock, index, futures or other symbol you trade. Symbols are not restricted to HDFC Bank.</p>
+<div class="actions"><input id="newSymbol" placeholder="Add symbol, e.g. RELIANCE" style="max-width:260px"><button id="addSymbol" class="gold">Add symbol</button></div><div id="symbolChips" class="actions"></div></div>
+<div class="panel"><h2>Backup & restore</h2><p class="note">Your journal is stored on this device/browser. Export a backup regularly, especially before changing phones or clearing browser data.</p><div class="actions"><button id="export">Export backup</button><label class="btn secondary">Import backup<input id="import" type="file" accept="application/json" class="hidden"></label><button id="clearAll" class="danger">Delete all data</button></div></div>
+</section>
+<p class="note">Privacy: trades are saved locally on this device. This version does not sync automatically between devices.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id), key='trade-journal-v1';
+let db=JSON.parse(localStorage.getItem(key)||'{"trades":[],"symbols":["HDFCBANK","RELIANCE","NIFTY","BANKNIFTY"]}');
+const save=()=>localStorage.setItem(key,JSON.stringify(db));
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const fmt=n=>Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+function refreshSymbols(){let sy=[...new Set([...db.symbols,...db.trades.map(t=>t.symbol)])].sort();$('symbols').innerHTML=sy.map(s=>`<option value="${esc(s)}">`).join('');$('filter').innerHTML='<option value="">All symbols</option>'+sy.map(s=>`<option>${esc(s)}</option>`).join('');$('symbolChips').innerHTML=sy.map(s=>`<span class="btn secondary">${esc(s)}</span>`).join('')}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function reset(){ $('tradeForm').reset();$('editId').value='';$('date').value=new Date().toISOString().slice(0,10);$('formTitle').textContent='Add trade'}
+function render(){refreshSymbols();let f=$('filter').value;let ts=[...db.trades].filter(t=>!f||t.symbol===f).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);$('trades').innerHTML=ts.map(t=>`<tr><td>${t.date}</td><td><b>${esc(t.symbol)}</b></td><td>${t.side}</td><td>${t.buy?fmt(t.buy):'—'}</td><td>${t.sell?fmt(t.sell):'—'}</td><td>${fmt(t.qty)}</td><td>${t.sl?fmt(t.sl):'—'}</td><td class="${t.pnl>0?'win':t.pnl<0?'loss':''}">${money(t.pnl)}</td><td class="${t.pnl>0?'win':t.pnl<0?'loss':''}">${t.pnl>0?'WIN':t.pnl<0?'LOSS':'BE'}</td><td><button class="secondary" onclick="editTrade('${t.id}')">Edit</button> <button class="danger" onclick="deleteTrade('${t.id}')">×</button></td></tr>`).join('');$('empty').classList.toggle('hidden',ts.length>0);summary()}
+function summary(){let ts=db.trades,w=ts.filter(t=>t.pnl>0),l=ts.filter(t=>t.pnl<0),gp=w.reduce((a,t)=>a+t.pnl,0),gl=-l.reduce((a,t)=>a+t.pnl,0),net=gp-gl;$('total').textContent=ts.length;$('wins').textContent=w.length;$('losses').textContent=l.length;$('winrate').textContent=(ts.length?(w.length/ts.length*100):0).toFixed(1)+'%';$('gross').textContent=money(gp);$('gloss').textContent=money(gl);$('pf').textContent=gl? (gp/gl).toFixed(2):(gp?'∞':'—');$('net').textContent=money(net);
+let groups={};ts.forEach(t=>{let m=t.date.slice(0,7);(groups[m]??=[]).push(t)});$('months').innerHTML=Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,a])=>{let ww=a.filter(t=>t.pnl>0),ll=a.filter(t=>t.pnl<0),p=ww.reduce((s,t)=>s+t.pnl,0),q=-ll.reduce((s,t)=>s+t.pnl,0);return `<tr><td>${m}</td><td>${a.length}</td><td>${ww.length}</td><td>${ll.length}</td><td>${(ww.length/a.length*100).toFixed(1)}%</td><td class="${p-q>=0?'win':'loss'}">${money(p-q)}</td><td>${q?(p/q).toFixed(2):(p?'∞':'—')}</td></tr>`}).join('')}
+$('tradeForm').addEventListener('submit',e=>{e.preventDefault();let symbol=$('symbol').value.trim().toUpperCase();let t={id:$('editId').value||crypto.randomUUID(),date:$('date').value,symbol,side:$('side').value,buy:+$('buy').value||0,sell:+$('sell').value||0,qty:+$('qty').value,sl:+$('sl').value||0,pnl:+$('pnl').value,created:Date.now()};if(!symbol||!t.date||!t.qty||!Number.isFinite(t.pnl))return;let i=db.trades.findIndex(x=>x.id===t.id);if(i>=0)db.trades[i]=t;else db.trades.push(t);if(!db.symbols.includes(symbol))db.symbols.push(symbol);save();reset();render()});
+window.editTrade=id=>{let t=db.trades.find(x=>x.id===id);if(!t)return;$('editId').value=t.id;for(let k of ['date','symbol','buy','sell','qty','sl','pnl','side'])$(k).value=t[k]??'';$('formTitle').textContent='Edit trade';window.scrollTo({top:0,behavior:'smooth'})};
+window.deleteTrade=id=>{if(confirm('Delete this trade?')){db.trades=db.trades.filter(t=>t.id!==id);save();render()}};
+$('resetBtn').onclick=reset;$('filter').onchange=render;
+$('addSymbol').onclick=()=>{let s=$('newSymbol').value.trim().toUpperCase();if(s&&!db.symbols.includes(s))db.symbols.push(s);$('newSymbol').value='';save();render()};
+$('export').onclick=()=>{let a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.href=u;a.download='trade-journal-backup.json';a.click();URL.revokeObjectURL(u)};
+$('import').onchange=async e=>{try{let x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.trades)||!Array.isArray(x.symbols))throw 0;if(confirm('Replace current journal with this backup?')){db=x;save();render()}}catch{alert('Invalid backup file')}e.target.value=''};
+$('clearAll').onclick=()=>{if(confirm('Permanently delete all trades and symbols?')){db={trades:[],symbols:['HDFCBANK','RELIANCE','NIFTY','BANKNIFTY']};save();render()}};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('active');x.classList.add('secondary')});b.classList.add('active');b.classList.remove('secondary');['journal','summary','settings'].forEach(id=>$(id).classList.toggle('hidden',id!==b.dataset.tab));if(b.dataset.tab==='summary')summary()});
+let promptInstall;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptInstall=e;$('installBtn').classList.remove('hidden')});$('installBtn').onclick=async()=>{if(promptInstall){promptInstall.prompt();promptInstall=null}else alert('Use browser menu → Add to Home screen / Install app')};
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+reset();render();
+</script></body></html>

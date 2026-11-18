@@ -1,0 +1,34 @@
+TRADE JOURNAL - BUILD GUIDE (Laptop + Android)
+================================================
+
+A) ANDROID APK (GitHub automatically builds it; no Android Studio setup needed)
+1. Laptop par github.com kholo aur free account se sign in karo.
+2. New repository banao: trade-journal (Public select karna easiest hai).
+3. Is ZIP ko extract karo. Extracted folder ke andar ke SAARE files/folders repository mein upload karo.
+   IMPORTANT: .github folder bhi upload hona chahiye. GitHub upload page par hidden files include karna zaroori hai.
+4. Commit changes.
+5. Repository > Actions tab kholo. "Build Android APK" workflow select karo.
+6. "Run workflow" dabao (agar automatic run nahi hua).
+7. Build complete hone par workflow run kholo, neeche Artifacts mein TradeJournal-debug-APK download karo.
+8. ZIP extract karke app-debug.apk Android phone mein bhejo, tap karke install karo.
+   Android agar pooche to Settings mein "Install unknown apps" permission allow karo.
+   Debug APK personal testing ke liye hai; Play Store release ke liye signed release build chahiye.
+
+B) INSTALLABLE BROWSER APP (GitHub Pages)
+1. Repository > Settings > Pages kholo.
+2. Build and deployment mein "GitHub Actions" select karo.
+3. Actions tab > "Publish installable web app" > Run workflow.
+4. Deployment complete hone par Actions run ke environment/page_url mein live HTTPS URL milega.
+5. Android Chrome mein URL kholo > menu (⋮) > Install app / Add to Home screen.
+
+FEATURES
+- Unlimited symbols; user can add their own.
+- Trade date, symbol, Buy/Sell, buy price, sell price, quantity, SL, P/L.
+- Result automatically WIN / LOSS / BE.
+- Edit/delete, symbol filter, monthly summary, win rate, profit factor, net P/L.
+- Local device/browser storage. It does NOT sync between devices.
+- Settings > Export backup before clearing browser/app data or changing device.
+
+NOTE
+- Android APK workflow and PWA deployment require a GitHub account and internet access.
+- APK built by workflow is an unsigned debug APK for personal installation, not Play Store publishing.
